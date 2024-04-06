@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Pembasmi Nyamuk</title>
+  <link rel="manifest" href="./index.json" />
+</head>
+
+<style>
+  .popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+  }
+
+  .popup2 {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+  }
+
+
+  body {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
+    cursor: none;
+    user-select: none;
+    position: relative;
+  }
+
+  .background {
+    position: absolute;
+    z-index: -10;
+    background: url(bgforest.jpg);
+    height: 100vh;
+    width: 100vw;
+    background-size: cover;
+    background-position: bottom;
+    background-repeat: no-repeat;
+  }
+
+  .score {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 30px;
+    pointer-events: none;
+    color: rgb(245, 245, 245);
+  }
+
+  .timer {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 30px;
+    pointer-events: none;
+    color: rgb(245, 245, 245);
+  }
+
+  .nyamuk {
+    height: 100px;
+    aspect-ratio: 4/6;
+    background: url(giphynyamuk2.gif);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    border-radius: 50%;
+    left: 0;
+    top: 0;
+    animation: nyamukmove1 10s linear forwards;
+  }
+
+  @keyframes nyamukmove1 {
+    0% {
+      transform: translate(20px, -20px);
+    }
+
+    20% {
+      transform: translate(-20px, -100px);
+    }
+
+    40% {
+      transform: translate(-40px, -200px);
+    }
+
+    60% {
+      transform: translate(20px, -300px);
+    }
+
+    80% {
+      transform: translate(40px, -500px);
+    }
+
+    100% {
+      transform: translate(-25px, -800px);
+    }
+  }
+
+  .weapon {
+    display: none;
+    height: 100px;
+    pointer-events: none;
+    z-index: 100;
+    position: absolute;
+    aspect-ratio: 1;
+    background: url(sendalpng.png) center no-repeat;
+    background-size: cover;
+    animation: scopeAnimation 1s infinite alternate;
+  }
+
+  @keyframes scopeAnimation {
+
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+
+  .shoot {
+    animation: shoot 1s;
+  }
+
+  .sandal {
+    position: absolute;
+    height: 100px;
+    aspect-ratio: 1;
+    background: url(sendal.gif) center no-repeat;
+    background-size: cover;
+    mix-blend-mode: multiply;
+    display: none;
+  }
+
+  @keyframes shoot {
+    0% {
+      transform: scale(1) translateY(0px);
+    }
+
+    50% {
+      transform: scale(1.3) translateY(-2px) translateX(5px);
+    }
+
+    100% {
+      transform: scale(1) translateY(0px);
+    }
+  }
+
+  .notice {
+    position: absolute;
+    height: 100px;
+    width: auto;
+    right: 20px;
+    top: 2px;
+    color: white
+  }
+
+  .scoreHistory {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    text-align: left;
+  }
+
+  .scoreList {
+    list-style: none;
+    padding: 0;
+  }
+
+  .scoreList li {
+    margin-bottom: 5px;
+  }
+</style>
+
+<body>
+  <div class="popup" id="instructionsPopup">
+    <h2>How to Play</h2>
+    <p>Use your mouse to move the weapon.</p>
+    <p>Press "M" to switch to the spray weapon.</p>
+    <p>Press "N" to switch to the spray weapon.</p>
+    <P>Click anywhere on the screen to shoot.</P>
+    <p>Shoot mosquitoes to earn points. Each hit earns you 3 points.</p>
+    <p>You have 30 seconds to play. Kepp an eye on the timer!</p>
+    <p>Press Space to start the game.</p>
+  </div>
+  <div class="popup" id="popup">
+    <h2>Welcome to the Game!</h2>
+    <p>Press Space to start playing.</p>
+  </div>
+  <div class="background"></div>
+  <div class="weapon"></div>
+  <div class="score">Score: 00</div>
+  <div class="notice">Press "M" & "N" to change weapon</div>
+  <div class="sandal"></div>
+  <div class="timer">30</div>
+  <div class="popup2" id="popup2">
+    <h2>Time's Up!</h2>
+    <p id="finalScore"></p>
+    <ul id="scoreList" class="scoreList"></ul>
+    <p>Press Space to continue</p>
+  </div>
+
+  <audio id="backgroundMusic" loop autoplay>
+    <source src="backsound.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    let backgroundMusic = document.getElementById("backgroundMusic");
+
+    function toggleMusic() {
+      if (backgroundMusic.paused) {
+        backgroundMusic.play();
+      } else {
+        backgroundMusic.pause();
+      }
+    }
+
+
+    document.addEventListener("keydown", (e) => {
+      if (e.keyCode === 32) {
+        toggleMusic();
+      }
+    });
+
+    function adjustVolume(volume) {
+      backgroundMusic.volume = volume;
+    }
+
+    let weapon = document.querySelector(".weapon");
+    let nyamuk = [];
+    let score = document.querySelector(".score");
+    let sandal = document.querySelector(".sandal");
+    let timerDisplay = document.querySelector(".timer");
+    let timerInterval;
+    let scoreHistory = [];
+
+    function showInstructionsPopup() {
+      document.getElementById("instructionsPopup").style.display = "block";
+      document.getElementById("popup").style.display = "none";
+      document.getElementById("popup2").style.display = "none";
+    }
+
+    function showPopup() {
+      document.getElementById("popup").style.display = "block";
+      document.getElementById("popup2").style.display = "none";
+      showInstructionsPopup();
+    }
+
+    window.onload = function () {
+      showPopup();
+    };
+
+    function startGame() {
+      document.getElementById("popup").style.display = "none";
+      document.getElementById("instructionsPopup").style.display = "none";
+      toggleMusic();
+      startTimer();
+      weapon.style.display = "block";
+      document.body.addEventListener("click", shoot);
+    }
+
+    function startTimer() {
+      let timerSeconds = 30;
+      timerDisplay.textContent = timerSeconds;
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        timerDisplay.textContent = timerSeconds;
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      if (!flags.gameOver) {
+        document.getElementById("popup2").style.display = "block";
+        let finalScore = flags.score;
+        scoreHistory.push(finalScore);
+        let scoreList = document.getElementById("scoreList");
+        scoreList.innerHTML = "";
+        scoreHistory.forEach((score, index) => {
+          let listItem = document.createElement("li");
+          listItem.textContent = `Game ${index + 1}: ${score}`;
+          scoreList.appendChild(listItem);
+        });
+        document.getElementById("finalScore").innerText = "Your final score is: " + finalScore;
+        flags.gameOver = true;
+      }
+    }
+
+
+    let shootsound1 = new Audio("slapaudio.mp3");
+    let shootsound2 = new Audio("sprayaudio.mp3");
+    let eshot = new Audio("negative_beeps-6008.mp3");
+
+
+    let flags = {
+      shoot: true,
+      score: 0,
+      firesound: new Audio("slapaudio.mp3"),
+      gameOver: false,
+      gameStarted: false
+    };
+
+
+    function addNyamuk() {
+      let nyamukElem = document.createElement("span");
+      nyamukElem.classList.add("nyamuk");
+      nyamukElem.style.top = Math.floor(Math.random() * 100) + "%";
+      nyamukElem.style.left =
+        Math.floor(Math.random() * (window.innerWidth - 80)) + "px";
+      nyamukElem.style.filter = `hue-rotate(${Math.floor(
+        Math.random() * 360
+      )}deg)`;
+      document.body.appendChild(nyamukElem);
+      nyamuk.push(nyamukElem);
+      setTimeout(() => {
+        nyamukElem.remove();
+      }, 12000);
+    }
+
+    addNyamuk();
+    setInterval(addNyamuk, 3000);
+
+
+    document.body.addEventListener("mousemove", (e) => {
+      weapon.style.left = e.pageX - 50 + "px";
+      weapon.style.top = e.pageY - 50 + "px";
+    });
+
+
+    function shoot(e) {
+      if (!flags.gameOver && flags.shoot) {
+        flags.shoot = false;
+        let target = e.target;
+        if (target.classList.contains("nyamuk")) {
+          target.remove();
+          sandal.style.display = "block";
+          sandal.style.left = e.pageX - 25 + "px";
+          sandal.style.top = e.pageY - 25 + "px";
+          setTimeout(() => {
+            sandal.style.display = "none";
+          }, 300);
+          score.innerText = `Score: ${(flags.score += 3)}`;
+          flags.firesound.play();
+        }
+        setTimeout(() => {
+          flags.shoot = true;
+        }, 1000);
+      }
+    }
+
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key == "m") {
+        weapon.style.backgroundImage = "url(spraypict.png)";
+        sandal.style.backgroundImage = "url(spray.gif)";
+        flags.firesound = shootsound2;
+      }
+      if (e.key == "n") {
+        weapon.style.backgroundImage = "url(sendalpng.png)";
+        sandal.style.backgroundImage = "url(sendal.gif)";
+        flags.firesound = shootsound1;
+      }
+    });
+
+
+    document.addEventListener("keydown", (e) => {
+      if (e.keyCode === 32 && !flags.gameStarted) {
+        startGame();
+        flags.gameStarted = true;
+      } else if (e.keyCode === 32 && flags.gameOver) {
+        resetGame();
+      }
+    });
+
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      startTimer();
+    }
+
+
+    function resetGame() {
+      document.getElementById("popup2").style.display = "none";
+      score.innerText = "Score: 00";
+      flags.score = 0;
+      resetTimer();
+      flags.gameOver = false;
+      flags.gameStarted = false;
+      continueGame();
+    }
+
+
+    document.getElementById("popup2").addEventListener("keydown", (e) => {
+      if (e.keyCode === 32 && flags.gameOver) {
+        resetGame();
+      }
+    });
+
+
+    window.onload = function () {
+      showPopup();
+    };
+
+
+    document.addEventListener("keydown", (e) => {
+      if (e.keyCode === 32 && flags.gameOver) {
+        resetGame();
+      }
+    });
+
+  </script>
+</body>
+
+</html>
